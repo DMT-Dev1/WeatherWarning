@@ -1,0 +1,100 @@
+:root {
+  --bg: #0f172a; /* slate-900 */
+  --fg: #e2e8f0; /* slate-200 */
+  --muted: #94a3b8; /* slate-400 */
+  --card: #111827; /* gray-900 */
+  --accent: #22d3ee; /* cyan-400 */
+  --error: #f87171; /* red-400 */
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: radial-gradient(1000px 600px at 10% 0%, #0b1220, var(--bg));
+  color: var(--fg);
+  font:
+    16px/1.5 system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+}
+
+h1 {
+  font-size: 2rem;
+  margin: 0 0 4px;
+}
+.subtle {
+  color: var(--muted);
+  margin: 0 0 24px;
+}
+
+.card {
+  background: linear-gradient(180deg, #0b0f19, var(--card));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.status {
+  color: var(--muted);
+}
+.data {
+  margin-top: 8px;
+}
+.note {
+  color: var(--muted);
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+
+.error {
+  color: var(--error);
+  margin-top: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+.time .clock {
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.time .tz {
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* Optional for v2 (map)
+.map {
+  width: 100%;
+  height: 260px;
+  border-radius: 12px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+*/
+
+footer {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--muted);
+}

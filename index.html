@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Where & When — Disruptive Mining</title>
+    <link rel="stylesheet" href="style.css" />
+    <meta
+      name="description"
+      content="Shows your approximate location and current local time."
+    />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Where &amp; When</h1>
+      <p class="subtle">A tiny app by Disruptive Mining</p>
+
+      <section class="card">
+        <h2>Your Location</h2>
+        <div id="locationStatus" class="status">Requesting permission…</div>
+        <div id="locationData" class="data hidden">
+          <div><strong>Latitude:</strong> <span id="lat">—</span></div>
+          <div><strong>Longitude:</strong> <span id="lon">—</span></div>
+          <div class="note">Accuracy: <span id="acc">—</span> meters</div>
+        </div>
+        <div id="locationError" class="error hidden"></div>
+        <!-- Optional: add a small map container in v2 -->
+        <!-- <div id="map" class="map"></div> -->
+      </section>
+
+      <section class="card">
+        <h2>Your Current Time</h2>
+        <div class="time">
+          <div id="clock" class="clock">—:—:—</div>
+          <div id="tz" class="tz">Detecting time zone…</div>
+        </div>
+      </section>
+
+      <footer>
+        <p class="subtle">
+          We don’t send your location anywhere. It stays in your browser.
+        </p>
+      </footer>
+    </main>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
