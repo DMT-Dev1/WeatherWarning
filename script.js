@@ -64,18 +64,24 @@ function saveSettings() {
 }
 
 function applySettingsToUI(currentSettings = settings) {
-  document.getElementById("maxWindGustAlarm").value = currentSettings.maxWindGustAlarm;
-  document.getElementById("maxWindGustCaution").value = currentSettings.maxWindGustCaution;
+  document.getElementById("maxWindGustAlarm").value =
+    currentSettings.maxWindGustAlarm;
+  document.getElementById("maxWindGustCaution").value =
+    currentSettings.maxWindGustCaution;
   document.getElementById("minTempAlarm").value = currentSettings.minTempAlarm;
-  document.getElementById("minTempCaution").value = currentSettings.minTempCaution;
+  document.getElementById("minTempCaution").value =
+    currentSettings.minTempCaution;
   document.getElementById("maxTempAlarm").value = currentSettings.maxTempAlarm;
-  document.getElementById("maxTempCaution").value = currentSettings.maxTempCaution;
+  document.getElementById("maxTempCaution").value =
+    currentSettings.maxTempCaution;
 }
 
 function readSettingsFromUI() {
   const loaded = {
     maxWindGustAlarm: Number(document.getElementById("maxWindGustAlarm").value),
-    maxWindGustCaution: Number(document.getElementById("maxWindGustCaution").value),
+    maxWindGustCaution: Number(
+      document.getElementById("maxWindGustCaution").value,
+    ),
     minTempAlarm: Number(document.getElementById("minTempAlarm").value),
     minTempCaution: Number(document.getElementById("minTempCaution").value),
     maxTempAlarm: Number(document.getElementById("maxTempAlarm").value),
@@ -124,22 +130,46 @@ function initSettingsListeners() {
       if (Number.isNaN(value)) return;
 
       // enforce relationships in UI entries
-      if (id === "maxWindGustAlarm" && value <= Number(document.getElementById("maxWindGustCaution").value)) {
-        document.getElementById("maxWindGustCaution").value = Math.max(0, value - 1);
+      if (
+        id === "maxWindGustAlarm" &&
+        value <= Number(document.getElementById("maxWindGustCaution").value)
+      ) {
+        document.getElementById("maxWindGustCaution").value = Math.max(
+          0,
+          value - 1,
+        );
       }
-      if (id === "maxWindGustCaution" && value >= Number(document.getElementById("maxWindGustAlarm").value)) {
+      if (
+        id === "maxWindGustCaution" &&
+        value >= Number(document.getElementById("maxWindGustAlarm").value)
+      ) {
         document.getElementById("maxWindGustAlarm").value = value + 1;
       }
-      if (id === "minTempAlarm" && value >= Number(document.getElementById("minTempCaution").value)) {
+      if (
+        id === "minTempAlarm" &&
+        value >= Number(document.getElementById("minTempCaution").value)
+      ) {
         document.getElementById("minTempCaution").value = value + 1;
       }
-      if (id === "minTempCaution" && value <= Number(document.getElementById("minTempAlarm").value)) {
+      if (
+        id === "minTempCaution" &&
+        value <= Number(document.getElementById("minTempAlarm").value)
+      ) {
         document.getElementById("minTempAlarm").value = value - 1;
       }
-      if (id === "maxTempAlarm" && value <= Number(document.getElementById("maxTempCaution").value)) {
-        document.getElementById("maxTempCaution").value = Math.max(0, value - 1);
+      if (
+        id === "maxTempAlarm" &&
+        value <= Number(document.getElementById("maxTempCaution").value)
+      ) {
+        document.getElementById("maxTempCaution").value = Math.max(
+          0,
+          value - 1,
+        );
       }
-      if (id === "maxTempCaution" && value >= Number(document.getElementById("maxTempAlarm").value)) {
+      if (
+        id === "maxTempCaution" &&
+        value >= Number(document.getElementById("maxTempAlarm").value)
+      ) {
         document.getElementById("maxTempAlarm").value = value + 1;
       }
     });
@@ -405,9 +435,9 @@ async function fetchAddress(lat, lon) {
       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
       {
         headers: {
-          "User-Agent": "WeatherWarning/1.0"
-        }
-      }
+          "User-Agent": "WeatherWarning/1.0",
+        },
+      },
     );
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
@@ -417,7 +447,12 @@ async function fetchAddress(lat, lon) {
     if (suburb) {
       addrEl.textContent = [suburb, state, country].filter(Boolean).join(", ");
     } else {
-      const general = data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.address?.state;
+      const general =
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.village ||
+        data.address?.county ||
+        data.address?.state;
       addrEl.textContent = general
         ? [general, state, country].filter(Boolean).join(", ")
         : data.display_name
@@ -462,13 +497,31 @@ function updateLookaheadSummary(segments) {
     return;
   }
 
-  const maxGust = Math.max(...segments.map((s) => (s.maxGust !== undefined ? s.maxGust : 0)));
-  const maxWind = Math.max(...segments.map((s) => (s.maxWind !== undefined ? s.maxWind : 0)));
-  const minTemp = Math.min(...segments.map((s) => (s.minTemp !== undefined ? s.minTemp : Infinity)));
-  const maxTemp = Math.max(...segments.map((s) => (s.maxTemp !== undefined ? s.maxTemp : -Infinity)));
+  const maxGust = Math.max(
+    ...segments.map((s) => (s.maxGust !== undefined ? s.maxGust : 0)),
+  );
+  const maxWind = Math.max(
+    ...segments.map((s) => (s.maxWind !== undefined ? s.maxWind : 0)),
+  );
+  const minTemp = Math.min(
+    ...segments.map((s) => (s.minTemp !== undefined ? s.minTemp : Infinity)),
+  );
+  const maxTemp = Math.max(
+    ...segments.map((s) => (s.maxTemp !== undefined ? s.maxTemp : -Infinity)),
+  );
 
-  const gustStatus = maxGust >= settings.maxWindGustAlarm ? "alarm" : maxGust >= settings.maxWindGustCaution ? "warning" : "normal";
-  const tempStatus = (maxTemp >= settings.maxTempAlarm || minTemp <= settings.minTempAlarm) ? "alarm" : (maxTemp >= settings.maxTempCaution || minTemp <= settings.minTempCaution) ? "warning" : "normal";
+  const gustStatus =
+    maxGust >= settings.maxWindGustAlarm
+      ? "alarm"
+      : maxGust >= settings.maxWindGustCaution
+        ? "warning"
+        : "normal";
+  const tempStatus =
+    maxTemp >= settings.maxTempAlarm || minTemp <= settings.minTempAlarm
+      ? "alarm"
+      : maxTemp >= settings.maxTempCaution || minTemp <= settings.minTempCaution
+        ? "warning"
+        : "normal";
 
   const bestCondition = segments.reduce((best, segment) => {
     if (segment.code === undefined) return best;
@@ -480,10 +533,19 @@ function updateLookaheadSummary(segments) {
   }, null);
 
   const conditions = [];
-  conditions.push({ priority: gustStatus === "alarm" ? 3 : gustStatus === "warning" ? 2 : 1, label: `Wind Gust: ${maxGust} km/h (${gustStatus})` });
-  conditions.push({ priority: tempStatus === "alarm" ? 3 : tempStatus === "warning" ? 2 : 1, label: `Temperature spread: ${isFinite(minTemp) ? Math.round(minTemp) + "°C" : "—"} to ${isFinite(maxTemp) ? Math.round(maxTemp) + "°C" : "—"} (${tempStatus})` });
+  conditions.push({
+    priority: gustStatus === "alarm" ? 3 : gustStatus === "warning" ? 2 : 1,
+    label: `Wind Gust: ${maxGust} km/h (${gustStatus})`,
+  });
+  conditions.push({
+    priority: tempStatus === "alarm" ? 3 : tempStatus === "warning" ? 2 : 1,
+    label: `Temperature spread: ${isFinite(minTemp) ? Math.round(minTemp) + "°C" : "—"} to ${isFinite(maxTemp) ? Math.round(maxTemp) + "°C" : "—"} (${tempStatus})`,
+  });
   if (bestCondition && bestCondition.severity > 2) {
-    conditions.push({ priority: bestCondition.severity, label: `Condition: ${WMO_DESCRIPTIONS[bestCondition.code] || "Unknown"}` });
+    conditions.push({
+      priority: bestCondition.severity,
+      label: `Condition: ${WMO_DESCRIPTIONS[bestCondition.code] || "Unknown"}`,
+    });
   }
 
   conditions.sort((a, b) => b.priority - a.priority);
@@ -497,11 +559,19 @@ function updateLookaheadSummary(segments) {
 
   const lines = [];
   lines.push(`<div><strong>Winds</strong></div>`);
-  lines.push(`<div>${conditions.find((c) => c.label.startsWith("Wind Gust")).label}</div>`);
+  lines.push(
+    `<div>${conditions.find((c) => c.label.startsWith("Wind Gust")).label}</div>`,
+  );
   lines.push(`<div><strong>Temperature</strong></div>`);
-  lines.push(`<div>${conditions.find((c) => c.label.startsWith("Temperature spread")).label}</div>`);
+  lines.push(
+    `<div>${conditions.find((c) => c.label.startsWith("Temperature spread")).label}</div>`,
+  );
 
-  const additional = conditions.filter((c) => !c.label.startsWith("Wind Gust") && !c.label.startsWith("Temperature spread"));
+  const additional = conditions.filter(
+    (c) =>
+      !c.label.startsWith("Wind Gust") &&
+      !c.label.startsWith("Temperature spread"),
+  );
   if (additional.length) {
     lines.push(`<div><strong>Other</strong></div>`);
     additional.forEach((item) => lines.push(`<div>${item.label}</div>`));
@@ -532,7 +602,9 @@ function buildForecast(data) {
   const nextFullHour = new Date(now);
   nextFullHour.setMinutes(0, 0, 0);
   nextFullHour.setHours(nextFullHour.getHours() + 1);
-  const startIndex = times.findIndex((t) => new Date(t).getTime() >= nextFullHour.getTime());
+  const startIndex = times.findIndex(
+    (t) => new Date(t).getTime() >= nextFullHour.getTime(),
+  );
   const start = startIndex >= 0 ? startIndex : 0;
   const end = Math.min(start + 24, times.length);
 
@@ -585,7 +657,10 @@ function buildForecast(data) {
 
       const severity = code !== undefined ? getWeatherSeverity(code) : 0;
       const keyScale = Math.max(gust || 0, wind || 0);
-      if (severity > bestSeverity || (severity === bestSeverity && keyScale > bestWind)) {
+      if (
+        severity > bestSeverity ||
+        (severity === bestSeverity && keyScale > bestWind)
+      ) {
         bestSeverity = severity;
         bestWind = keyScale;
         bestCode = code;
@@ -636,36 +711,46 @@ function buildForecast(data) {
     conditionRow.appendChild(condCell);
 
     const tempCell = document.createElement("td");
-    tempCell.innerHTML = segment.minTemp !== undefined
-      ? `<span class="digits">${Math.round(segment.minTemp)}</span><span class="unit">°C</span> / <span class="digits">${Math.round(segment.maxTemp)}</span><span class="unit">°C</span>`
-      : "—";
+    tempCell.innerHTML =
+      segment.minTemp !== undefined
+        ? `<span class="digits">${Math.round(segment.minTemp)}</span><span class="unit">°C</span> / <span class="digits">${Math.round(segment.maxTemp)}</span><span class="unit">°C</span>`
+        : "—";
     if (segment.minTemp !== undefined) {
-      if (segment.minTemp <= settings.minTempAlarm) tempCell.classList.add("forecast-alarm-cold");
-      else if (segment.minTemp <= settings.minTempCaution) tempCell.classList.add("forecast-caution-cold");
-      else if (segment.maxTemp >= settings.maxTempAlarm) tempCell.classList.add("forecast-alarm");
-      else if (segment.maxTemp >= settings.maxTempCaution) tempCell.classList.add("forecast-warning");
+      if (segment.minTemp <= settings.minTempAlarm)
+        tempCell.classList.add("forecast-alarm-cold");
+      else if (segment.minTemp <= settings.minTempCaution)
+        tempCell.classList.add("forecast-caution-cold");
+      else if (segment.maxTemp >= settings.maxTempAlarm)
+        tempCell.classList.add("forecast-alarm");
+      else if (segment.maxTemp >= settings.maxTempCaution)
+        tempCell.classList.add("forecast-warning");
     }
     tempRow.appendChild(tempCell);
 
     const feelsCell = document.createElement("td");
-    feelsCell.innerHTML = segment.minFeel !== undefined
-      ? `<span class="digits">${Math.round(segment.minFeel)}</span><span class="unit">°C</span> / <span class="digits">${Math.round(segment.maxFeel)}</span><span class="unit">°C</span>`
-      : "—";
+    feelsCell.innerHTML =
+      segment.minFeel !== undefined
+        ? `<span class="digits">${Math.round(segment.minFeel)}</span><span class="unit">°C</span> / <span class="digits">${Math.round(segment.maxFeel)}</span><span class="unit">°C</span>`
+        : "—";
     feelsRow.appendChild(feelsCell);
 
     const windCell = document.createElement("td");
-    windCell.innerHTML = segment.maxWind !== undefined
-      ? `<span class="digits">${Math.round(segment.maxWind)}</span><span class="unit"> km/h </span><span class="unit">${segment.windDir !== undefined ? bearingArrow(segment.windDir) + ' ' + degToCompass(segment.windDir) : ""}</span>`
-      : "—";
+    windCell.innerHTML =
+      segment.maxWind !== undefined
+        ? `<span class="digits">${Math.round(segment.maxWind)}</span><span class="unit"> km/h </span><span class="unit">${segment.windDir !== undefined ? bearingArrow(segment.windDir) + " " + degToCompass(segment.windDir) : ""}</span>`
+        : "—";
     windRow.appendChild(windCell);
 
     const gustCell = document.createElement("td");
-    gustCell.innerHTML = segment.maxGust !== undefined
-      ? `<span class="digits">${Math.round(segment.maxGust)}</span><span class="unit"> km/h </span><span class="unit">${segment.gustDir !== undefined ? bearingArrow(segment.gustDir) + ' ' + degToCompass(segment.gustDir) : ""}</span>`
-      : "—";
+    gustCell.innerHTML =
+      segment.maxGust !== undefined
+        ? `<span class="digits">${Math.round(segment.maxGust)}</span><span class="unit"> km/h </span><span class="unit">${segment.gustDir !== undefined ? bearingArrow(segment.gustDir) + " " + degToCompass(segment.gustDir) : ""}</span>`
+        : "—";
     if (segment.maxGust !== undefined) {
-      if (segment.maxGust >= settings.maxWindGustAlarm) gustCell.classList.add("forecast-alarm");
-      else if (segment.maxGust >= settings.maxWindGustCaution) gustCell.classList.add("forecast-warning");
+      if (segment.maxGust >= settings.maxWindGustAlarm)
+        gustCell.classList.add("forecast-alarm");
+      else if (segment.maxGust >= settings.maxWindGustCaution)
+        gustCell.classList.add("forecast-warning");
     }
     gustRow.appendChild(gustCell);
   });
@@ -717,7 +802,11 @@ function buildForecast(data) {
     }
     if (code !== undefined) {
       // pick most severe by gust + wind
-      if (entry.bestCode === undefined || gust > entry.maxGust || wind > entry.maxWind) {
+      if (
+        entry.bestCode === undefined ||
+        gust > entry.maxGust ||
+        wind > entry.maxWind
+      ) {
         entry.bestCode = code;
       }
     }
@@ -743,28 +832,39 @@ function buildForecast(data) {
     condCell.textContent = `${getWeatherIcon(entry.bestCode, true)} ${WMO_DESCRIPTIONS[entry.bestCode] || "—"}`;
     tempCell.textContent = `${entry.minTemp === Infinity ? "—" : Math.round(entry.minTemp) + "°C"} / ${entry.maxTemp === -Infinity ? "—" : Math.round(entry.maxTemp) + "°C"}`;
 
-    gustCell.textContent = entry.maxGust === -Infinity ? "—" : `${Math.round(entry.maxGust)} km/h ${entry.maxGustDir !== undefined ? bearingArrow(entry.maxGustDir) + " " + degToCompass(entry.maxGustDir) : ""}`;
-    windCell.textContent = entry.maxWind === -Infinity ? "—" : `${Math.round(entry.maxWind)} km/h ${entry.maxWindDir !== undefined ? bearingArrow(entry.maxWindDir) + " " + degToCompass(entry.maxWindDir) : ""}`;
+    gustCell.textContent =
+      entry.maxGust === -Infinity
+        ? "—"
+        : `${Math.round(entry.maxGust)} km/h ${entry.maxGustDir !== undefined ? bearingArrow(entry.maxGustDir) + " " + degToCompass(entry.maxGustDir) : ""}`;
+    windCell.textContent =
+      entry.maxWind === -Infinity
+        ? "—"
+        : `${Math.round(entry.maxWind)} km/h ${entry.maxWindDir !== undefined ? bearingArrow(entry.maxWindDir) + " " + degToCompass(entry.maxWindDir) : ""}`;
 
     // threshold for summary by worst values
     tempCell.className = "";
     gustCell.className = "";
     if (entry.minTemp !== Infinity) {
-      if (entry.minTemp <= settings.minTempAlarm) tempCell.classList.add("forecast-alarm-cold");
-      else if (entry.minTemp <= settings.minTempCaution) tempCell.classList.add("forecast-caution-cold");
-      else if (entry.maxTemp >= settings.maxTempAlarm) tempCell.classList.add("forecast-alarm");
-      else if (entry.maxTemp >= settings.maxTempCaution) tempCell.classList.add("forecast-warning");
+      if (entry.minTemp <= settings.minTempAlarm)
+        tempCell.classList.add("forecast-alarm-cold");
+      else if (entry.minTemp <= settings.minTempCaution)
+        tempCell.classList.add("forecast-caution-cold");
+      else if (entry.maxTemp >= settings.maxTempAlarm)
+        tempCell.classList.add("forecast-alarm");
+      else if (entry.maxTemp >= settings.maxTempCaution)
+        tempCell.classList.add("forecast-warning");
     }
     if (entry.maxGust !== -Infinity) {
-      if (entry.maxGust >= settings.maxWindGustAlarm) gustCell.classList.add("forecast-alarm");
-      else if (entry.maxGust >= settings.maxWindGustCaution) gustCell.classList.add("forecast-warning");
+      if (entry.maxGust >= settings.maxWindGustAlarm)
+        gustCell.classList.add("forecast-alarm");
+      else if (entry.maxGust >= settings.maxWindGustCaution)
+        gustCell.classList.add("forecast-warning");
     }
 
     row.append(periodCell, condCell, tempCell, gustCell, windCell);
     rowsSummary.appendChild(row);
   });
 }
-
 
 async function fetchWeather(lat, lon) {
   try {
@@ -798,7 +898,10 @@ async function fetchWeather(lat, lon) {
 
     const readableDesc = desc + " (current)";
     document.getElementById("wxDesc").textContent = readableDesc;
-    document.getElementById("wxIcon").textContent = getWeatherIcon(c.weathercode, true);
+    document.getElementById("wxIcon").textContent = getWeatherIcon(
+      c.weathercode,
+      true,
+    );
     document.getElementById("wxIconLabel").textContent = readableDesc;
     document.getElementById("wxTemp").textContent =
       todayTemp !== undefined ? `${Math.round(todayTemp)}°C` : "—";
@@ -841,7 +944,8 @@ async function fetchWeather(lat, lon) {
     } else {
       document.getElementById("forecastData").classList.add("hidden");
       document.getElementById("forecastError").classList.remove("hidden");
-      document.getElementById("forecastError").textContent = "Forecast data not available.";
+      document.getElementById("forecastError").textContent =
+        "Forecast data not available.";
       document.getElementById("forecastStatus").textContent = "";
     }
 
@@ -856,7 +960,8 @@ async function fetchWeather(lat, lon) {
 
     document.getElementById("forecastData").classList.add("hidden");
     document.getElementById("forecastError").classList.remove("hidden");
-    document.getElementById("forecastError").textContent = `Forecast unavailable: ${e.message || e}`;
+    document.getElementById("forecastError").textContent =
+      `Forecast unavailable: ${e.message || e}`;
     document.getElementById("forecastStatus").textContent = "";
 
     wxStatus.textContent = "Could not load weather data.";
