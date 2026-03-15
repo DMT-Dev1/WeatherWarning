@@ -241,11 +241,33 @@ function updateScaleBar(config) {
   }
   if (normalLabel) {
     normalLabel.textContent = "Normal";
-    normalLabel.style.color = "#9bb6d6";
+    normalLabel.style.color = "#ffffff";
   }
 
   cautionMarker.style.backgroundColor = "rgba(255,165,0,1)";
   alarmMarker.style.backgroundColor = "rgba(255,0,0,1)";
+
+  if (config.zeroMarkerId) {
+    const zeroMarker = document.getElementById(config.zeroMarkerId);
+    if (zeroMarker) {
+      const rangeMin = Number.isFinite(config.rangeMin) ? config.rangeMin : 0;
+      const rangeMax = Number.isFinite(config.rangeMax)
+        ? config.rangeMax
+        : Math.max(alarm, caution, 100);
+      if (rangeMax > rangeMin) {
+        const zeroIsAtBoundary = rangeMin === 0 || rangeMax === 0;
+        if (rangeMin < 0 && rangeMax > 0 && !zeroIsAtBoundary) {
+          const zeroPct = ((0 - rangeMin) / (rangeMax - rangeMin)) * 100;
+          zeroMarker.style.left = `${zeroPct}%`;
+          zeroMarker.style.display = "block";
+        } else {
+          zeroMarker.style.display = "none";
+        }
+      } else {
+        zeroMarker.style.display = "none";
+      }
+    }
+  }
 }
 
 function updateWindGustBar(currentSettings = settings) {
@@ -262,10 +284,15 @@ function updateWindGustBar(currentSettings = settings) {
     cautionValue: currentSettings.maxWindGustCaution,
     alarmValue: currentSettings.maxWindGustAlarm,
     unit: "km/h",
-    normalColour: "transparent",
-    cautionColour: "rgba(255,165,0,0.2)",
-    alarmColour: "rgba(255,0,0,0.25)",
+    normalColour: "rgba(0,0,0,1)",
+    cautionColour: "rgba(255,165,0,0.8)",
+    alarmColour: "rgba(255,0,0,0.9)",
   });
+
+  const gustZeroEl = document.getElementById("gustScaleZero");
+  if (gustZeroEl) {
+    gustZeroEl.classList.remove("hidden");
+  }
 }
 
 function updateTempScaleBar(currentSettings = settings) {
@@ -288,13 +315,12 @@ function updateTempScaleBar(currentSettings = settings) {
   const maxCautionPct = pct(maxCaution);
   const maxAlarmPct = pct(maxAlarm);
 
-  fill.style.background = `linear-gradient(to right, 
-      rgba(30,58,138,0.45) 0%, rgba(30,58,138,0.45) ${minAlarmPct}%,
-      rgba(135,206,250,0.35) ${minAlarmPct}%, rgba(135,206,250,0.35) ${minCautionPct}%,
-      transparent ${minCautionPct}%, transparent ${maxCautionPct}%,
-      rgba(255,165,0,0.2) ${maxCautionPct}%, rgba(255,165,0,0.2) ${maxAlarmPct}%,
-      rgba(255,0,0,0.25) ${maxAlarmPct}%, rgba(255,0,0,0.25) 100%)`;
-
+  fill.style.background = `linear-gradient(to right,
+      rgba(0,51,153,0.9) 0%, rgba(0,51,153,0.9) ${minAlarmPct}%,
+      rgba(0,85,255,0.8) ${minAlarmPct}%, rgba(0,85,255,0.8) ${minCautionPct}%,
+      rgba(0,0,0,1) ${minCautionPct}%, rgba(0,0,0,1) ${maxCautionPct}%,
+      rgba(255,165,0,0.8) ${maxCautionPct}%, rgba(255,165,0,0.8) ${maxAlarmPct}%,
+      rgba(255,0,0,0.9) ${maxAlarmPct}%, rgba(255,0,0,0.9) 100%)`;
   const markers = [
     ["minTempCautionMarker", minCautionPct],
     ["minTempAlarmMarker", minAlarmPct],
@@ -318,6 +344,19 @@ function updateTempScaleBar(currentSettings = settings) {
     const el = document.getElementById(id);
     if (el) el.style.left = `${left}%`;
   });
+
+  const zeroEl = document.getElementById("tempScaleZero");
+  if (zeroEl) {
+    const scaleMin = -20;
+    const scaleMax = 50;
+    if (scaleMin < 0 && scaleMax > 0 && scaleMin !== 0 && scaleMax !== 0) {
+      const zeroPct = ((0 - scaleMin) / (scaleMax - scaleMin)) * 100;
+      zeroEl.style.left = `${zeroPct}%`;
+      zeroEl.style.display = "block";
+    } else {
+      zeroEl.style.display = "none";
+    }
+  }
 }
 
 function setInputValue(id, value) {
@@ -391,6 +430,35 @@ function readSettingsFromUI() {
   return loaded;
 }
 
+function setThresholdMessage(message, isError = true) {
+  const gustEl = document.getElementById("gustThresholdStatus");
+  const tempEl = document.getElementById("tempThresholdStatus");
+  if (gustEl) {
+    gustEl.textContent = message;
+    gustEl.style.color = isError ? "#ff6f9e" : "#bfcffd";
+  }
+  if (tempEl) {
+    tempEl.textContent = message;
+    tempEl.style.color = isError ? "#ff6f9e" : "#bfcffd";
+  }
+}
+
+function validateThresholdValues(values) {
+  if (values.maxWindGustCaution >= values.maxWindGustAlarm) {
+    return ["Wind gust caution must be less than wind gust alarm."];
+  }
+  if (values.minTempAlarm >= values.minTempCaution) {
+    return ["Min temp alarm must be less than min temp caution."];
+  }
+  if (values.minTempCaution >= values.maxTempCaution) {
+    return ["Min temp caution must be less than max temp caution."];
+  }
+  if (values.maxTempCaution >= values.maxTempAlarm) {
+    return ["Max temp caution must be less than max temp alarm."];
+  }
+  return [];
+}
+
 function initSettingsListeners() {
   [
     "maxWindGustAlarm",
@@ -402,54 +470,40 @@ function initSettingsListeners() {
   ].forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener("input", () => {
-      // live validation only; no re-coloring until Save
-      const value = Number(el.value);
-      if (Number.isNaN(value)) return;
 
-      // enforce relationships in UI entries
-      if (
-        id === "maxWindGustAlarm" &&
-        value <= Number(document.getElementById("maxWindGustCaution").value)
-      ) {
-        document.getElementById("maxWindGustCaution").value = Math.max(
-          0,
-          value - 1,
-        );
+    el.dataset.prevValue = el.value;
+
+    el.addEventListener("focus", () => {
+      el.dataset.prevValue = el.value;
+    });
+
+    el.addEventListener("input", () => {
+      const value = Number(el.value);
+      if (Number.isNaN(value)) {
+        setThresholdMessage("Please enter a numeric value.");
+        return;
       }
-      if (
-        id === "maxWindGustCaution" &&
-        value >= Number(document.getElementById("maxWindGustAlarm").value)
-      ) {
-        document.getElementById("maxWindGustAlarm").value = value + 1;
+
+      const candidate = {
+        maxWindGustAlarm: getInputNumber("maxWindGustAlarm", settings.maxWindGustAlarm),
+        maxWindGustCaution: getInputNumber("maxWindGustCaution", settings.maxWindGustCaution),
+        minTempAlarm: getInputNumber("minTempAlarm", settings.minTempAlarm),
+        minTempCaution: getInputNumber("minTempCaution", settings.minTempCaution),
+        maxTempCaution: getInputNumber("maxTempCaution", settings.maxTempCaution),
+        maxTempAlarm: getInputNumber("maxTempAlarm", settings.maxTempAlarm),
+      };
+
+      candidate[id] = value;
+
+      const errors = validateThresholdValues(candidate);
+      if (errors.length) {
+        el.value = el.dataset.prevValue ?? el.value;
+        setThresholdMessage(errors[0]);
+        return;
       }
-      if (
-        id === "minTempAlarm" &&
-        value >= Number(document.getElementById("minTempCaution").value)
-      ) {
-        document.getElementById("minTempCaution").value = value + 1;
-      }
-      if (
-        id === "minTempCaution" &&
-        value <= Number(document.getElementById("minTempAlarm").value)
-      ) {
-        document.getElementById("minTempAlarm").value = value - 1;
-      }
-      if (
-        id === "maxTempAlarm" &&
-        value <= Number(document.getElementById("maxTempCaution").value)
-      ) {
-        document.getElementById("maxTempCaution").value = Math.max(
-          0,
-          value - 1,
-        );
-      }
-      if (
-        id === "maxTempCaution" &&
-        value >= Number(document.getElementById("maxTempAlarm").value)
-      ) {
-        document.getElementById("maxTempAlarm").value = value + 1;
-      }
+
+      setThresholdMessage("", false);
+      el.dataset.prevValue = el.value;
     });
   });
 
@@ -467,9 +521,18 @@ function initSettingsListeners() {
 
   if (saveBtn) {
     saveBtn.addEventListener("click", () => {
-      settings = readSettingsFromUI();
+      const candidate = readSettingsFromUI();
+      const errors = validateThresholdValues(candidate);
+      if (errors.length) {
+        setThresholdMessage("Save failed: " + errors.join(" "));
+        showStatus("Settings not saved.");
+        return;
+      }
+
+      settings = candidate;
       saveSettings();
       applySettingsToUI();
+      setThresholdMessage("", false);
       if (window.cachedForecast && window.cachedForecast.time?.length) {
         buildForecast(window.cachedForecast);
       }
@@ -520,7 +583,7 @@ function showPosition(pos) {
   document.getElementById("lon").textContent = longitude.toFixed(6);
   locData.classList.remove("hidden");
   locErr.classList.add("hidden");
-  locStatus.textContent = "Location resolved. Loading weather...";
+  locStatus.textContent = "Location resolved.";
 
   // Update weather status while we fetch new weather
   wxStatus.textContent = "Loading weather...";
@@ -975,11 +1038,11 @@ function updateLookaheadSummary(segments) {
 
   const conditions = [];
   conditions.push({
-    priority: gustStatus === "alarm" ? 3 : gustStatus === "warning" ? 2 : 1,
+    priority: gustStatus === "alarm" ? 4 : gustStatus === "warning" ? 3 : 1,
     label: `Wind Gust: ${maxGust} km/h (${gustStatus})`,
   });
   conditions.push({
-    priority: tempStatus === "alarm" ? 3 : tempStatus === "warning" ? 2 : 1,
+    priority: tempStatus === "alarm" ? 4 : tempStatus === "warning" ? 3 : 1,
     label: `Temperature spread: ${isFinite(minTemp) ? Math.round(minTemp) + "°C" : "—"} to ${isFinite(maxTemp) ? Math.round(maxTemp) + "°C" : "—"} (${tempStatus})`,
   });
   if (bestCondition && bestCondition.severity > 2) {
@@ -993,29 +1056,182 @@ function updateLookaheadSummary(segments) {
 
   const hasConcern = conditions.some((c) => c.priority > 1);
 
+  const eventDetails = segments
+    .flatMap((segment) => {
+      const entries = [];
+      if (segment.maxGust !== undefined) {
+        if (segment.maxGust >= settings.maxWindGustAlarm) {
+          entries.push({severity: 4, text: `Gust ALARM ${Math.round(segment.maxGust)} km/h`});
+        } else if (segment.maxGust >= settings.maxWindGustCaution) {
+          entries.push({severity: 3, text: `Gust WARNING ${Math.round(segment.maxGust)} km/h`});
+        }
+      }
+      if (segment.minTemp !== undefined && segment.maxTemp !== undefined) {
+        if (segment.minTemp <= settings.minTempAlarm || segment.maxTemp >= settings.maxTempAlarm) {
+          entries.push({severity: 4, text: `Temp ALARM ${Math.round(segment.minTemp)}-${Math.round(segment.maxTemp)}°C`});
+        } else if (segment.minTemp <= settings.minTempCaution || segment.maxTemp >= settings.maxTempCaution) {
+          entries.push({severity: 3, text: `Temp WARNING ${Math.round(segment.minTemp)}-${Math.round(segment.maxTemp)}°C`});
+        }
+      }
+      if (segment.code !== undefined && getWeatherSeverity(segment.code) >= 6) {
+        entries.push({severity: getWeatherSeverity(segment.code), text: `${WMO_DESCRIPTIONS[segment.code] || 'Weather alert'}`});
+      }
+      return entries.map((entry) => ({...entry, when: segment.label}));
+    })
+    .sort((a, b) => b.severity - a.severity);
+
+  const topEvent = eventDetails[0];
+  const topEventHeading = topEvent
+    ? `Most critical single event: ${topEvent.text} at ${topEvent.when}`
+    : "Most critical single event: none";
+
+  const tempDescriptor = (minT, maxT) => {
+    if (minT <= settings.minTempAlarm) return "COLD";
+    if (minT <= settings.minTempCaution) return "COOL";
+    if (maxT >= settings.maxTempAlarm) return "VERY HOT";
+    if (maxT >= settings.maxTempCaution) return "HOT";
+    return "MILD";
+  };
+
+  const gustStatusOf = (g) => {
+    if (g >= settings.maxWindGustAlarm) return "ALARM";
+    if (g >= settings.maxWindGustCaution) return "CAUTION";
+    return "NORMAL";
+  };
+
+  const firstAlertSegment = segments.find((segment) => {
+    const isGustAlert = segment.maxGust !== undefined && segment.maxGust >= settings.maxWindGustCaution;
+    const isTempAlert =
+      segment.minTemp !== undefined && segment.minTemp <= settings.minTempCaution ||
+      segment.maxTemp !== undefined && segment.maxTemp >= settings.maxTempCaution;
+    const isWeatherAlert = segment.code !== undefined && getWeatherSeverity(segment.code) > 3;
+    return isGustAlert || isTempAlert || isWeatherAlert;
+  });
+
+  const formattedHeadline = (() => {
+    if (!firstAlertSegment) return "No immediate alert period identified.";
+
+    const part = firstAlertSegment.timeClass.replace('time-', '').replace('-', ' ').toUpperCase();
+    const day = getDayName(firstAlertSegment.date, 'long').toUpperCase();
+
+    let text = `${part} (${day}) WILL BE ${tempDescriptor(firstAlertSegment.minTemp ?? 0, firstAlertSegment.maxTemp ?? 0)}`;
+
+    const wmo = firstAlertSegment.code !== undefined ? WMO_DESCRIPTIONS[firstAlertSegment.code] : null;
+    if (wmo) {
+      const weatherText = wmo.toUpperCase();
+      text += ` AND ${weatherText}`;
+    }
+
+    // if 1pm style from label if exact hours exist
+    const periodLabel = firstAlertSegment.label.toUpperCase();
+    text += ` STARTING FROM ${periodLabel}.`;
+
+    return text;
+  })();
+
+  const gustAlerts = segments.map((segment) => ({
+    when: segment.label,
+    day: getDayName(segment.date, 'long'),
+    period: segment.timeClass.replace('time-', '').toUpperCase(),
+    status: gustStatusOf(segment.maxGust ?? 0),
+    value: Math.round(segment.maxGust ?? 0),
+  }));
+
+  const cautionStart = gustAlerts.find((s) => s.status === 'CAUTION');
+  const alarmStart = gustAlerts.find((s) => s.status === 'ALARM');
+  const downToNormal = gustAlerts.reverse().find((s) => s.status === 'NORMAL');
+
+  const tempAlertSentences = [];
+  const firstCold = segments.find((s) => s.minTemp !== undefined && s.minTemp <= settings.minTempAlarm);
+  const firstCool = segments.find((s) => s.minTemp !== undefined && s.minTemp <= settings.minTempCaution);
+  const firstHot = segments.find((s) => s.maxTemp !== undefined && s.maxTemp >= settings.maxTempCaution);
+  const firstVeryHot = segments.find((s) => s.maxTemp !== undefined && s.maxTemp >= settings.maxTempAlarm);
+
+  if (firstCold) {
+    tempAlertSentences.push(`${getDayName(firstCold.date, 'long')} will be a COLD morning`);
+  }
+  if (firstCool && firstCool !== firstCold) {
+    tempAlertSentences.push(`and COOL evening into night`);
+  }
+  if (firstVeryHot) {
+    tempAlertSentences.push(`MAX ALERT: VERY HOT conditions expected`);
+  } else if (firstHot) {
+    tempAlertSentences.push(`and HOT conditions can develop`);
+  }
+
+  const gustSentence = [];
+  if (cautionStart) {
+    gustSentence.push(`WIND GUST WARNING: CAUTION level begins ${cautionStart.period.toLowerCase()} ${cautionStart.day}`);
+  }
+  if (alarmStart) {
+    gustSentence.push(`reaching ALARM by ${alarmStart.period.toLowerCase()} (${alarmStart.value} km/h)`);
+  }
+  if (downToNormal) {
+    gustSentence.push(`reducing to CAUTION/normal by ${downToNormal.period.toLowerCase()} ${downToNormal.day}`);
+  }
+
   if (!hasConcern) {
-    container.textContent = "no concern";
+    container.innerHTML = `
+      <div><strong>${formattedHeadline}</strong></div>
+      <div>All clear for the next 24 hours.</div>
+      <div>${gustSentence.join(', ')}.</div>
+      <div>${tempAlertSentences.join('; ')}.</div>
+    `;
     return;
   }
 
   const lines = [];
-  lines.push(`<div><strong>Winds</strong></div>`);
-  lines.push(
-    `<div>${conditions.find((c) => c.label.startsWith("Wind Gust")).label}</div>`,
-  );
-  lines.push(`<div><strong>Temperature</strong></div>`);
-  lines.push(
-    `<div>${conditions.find((c) => c.label.startsWith("Temperature spread")).label}</div>`,
-  );
+  lines.push(`<div><strong>${formattedHeadline}</strong></div>`);
+  lines.push(`<div>${gustSentence.join(', ')}.</div>`);
+  lines.push(`<div>${tempAlertSentences.join('; ')}.</div>`);
+  lines.push(`<div>${conditions[0].label}</div>`);
+  lines.push(`<div>${conditions[1]?.label || ''}</div>`);
 
-  const additional = conditions.filter(
-    (c) =>
-      !c.label.startsWith("Wind Gust") &&
-      !c.label.startsWith("Temperature spread"),
-  );
-  if (additional.length) {
-    lines.push(`<div><strong>Other</strong></div>`);
-    additional.forEach((item) => lines.push(`<div>${item.label}</div>`));
+  if (conditions.length > 2) {
+    lines.push(`<div><strong>Other conditions</strong></div>`);
+    conditions.slice(2).forEach((item) => lines.push(`<div>${item.label}</div>`));
+  }
+
+  // Chronological alert timeline from segments
+  const timeline = segments
+    .map((segment) => {
+      const entries = [];
+      const segGust = segment.maxGust;
+      const segMinTemp = segment.minTemp;
+      const segMaxTemp = segment.maxTemp;
+      const segCode = segment.code;
+
+      if (segGust !== undefined) {
+        if (segGust >= settings.maxWindGustAlarm) {
+          entries.push(`Gust ALARM ${Math.round(segGust)} km/h`);
+        } else if (segGust >= settings.maxWindGustCaution) {
+          entries.push(`Gust WARNING ${Math.round(segGust)} km/h`);
+        }
+      }
+
+      if (segMinTemp !== undefined && segMaxTemp !== undefined) {
+        if (segMinTemp <= settings.minTempAlarm || segMaxTemp >= settings.maxTempAlarm) {
+          entries.push(`Temp ALARM ${Math.round(segMinTemp)}-${Math.round(segMaxTemp)}°C`);
+        } else if (
+          segMinTemp <= settings.minTempCaution ||
+          segMaxTemp >= settings.maxTempCaution
+        ) {
+          entries.push(`Temp WARNING ${Math.round(segMinTemp)}-${Math.round(segMaxTemp)}°C`);
+        }
+      }
+
+      if (segCode !== undefined && getWeatherSeverity(segCode) > 3) {
+        entries.push(`${WMO_DESCRIPTIONS[segCode] || "Weather"}`);
+      }
+
+      if (!entries.length) return null;
+      return `<div><strong>${segment.label}:</strong> ${entries.join("; ")}</div>`;
+    })
+    .filter(Boolean);
+
+  if (timeline.length) {
+    lines.push(`<div><strong>Alert timeline</strong></div>`);
+    timeline.forEach((entry) => lines.push(entry));
   }
 
   container.innerHTML = lines.join("");
@@ -1026,7 +1242,7 @@ function buildForecast(data) {
   const body24 = document.getElementById("forecast24Body");
   const rowsSummary = document.getElementById("forecastRowsSummary");
 
-  headerRow.innerHTML = "<th></th>";
+  headerRow.innerHTML = "<th>Time</th>";
   body24.innerHTML = "";
   rowsSummary.innerHTML = "";
 
@@ -1199,11 +1415,13 @@ function buildForecast(data) {
     conditionRow.appendChild(condCell);
 
     const tempCell = document.createElement("td");
-    tempCell.innerHTML =
-      segment.minTemp !== undefined
-        ? `<span class="digits">${Math.round(segment.minTemp)}</span><span class="unit">-${Math.round(segment.maxTemp)}°C</span>`
-        : "—";
     if (segment.minTemp !== undefined) {
+      const minTempValue = Math.round(segment.minTemp);
+      const maxTempValue = Math.round(segment.maxTemp);
+      tempCell.textContent =
+        minTempValue === maxTempValue
+          ? `${minTempValue}°C`
+          : `${minTempValue}-${maxTempValue}°C`;
       if (segment.minTemp <= settings.minTempAlarm)
         tempCell.classList.add("forecast-alarm-cold");
       else if (segment.minTemp <= settings.minTempCaution)
@@ -1212,6 +1430,8 @@ function buildForecast(data) {
         tempCell.classList.add("forecast-alarm");
       else if (segment.maxTemp >= settings.maxTempCaution)
         tempCell.classList.add("forecast-warning");
+    } else {
+      tempCell.textContent = "—";
     }
     tempRow.appendChild(tempCell);
 
@@ -1241,7 +1461,7 @@ function buildForecast(data) {
 
   // summary 25h-7d by day with morning/day/evening/night columns
   const dayStats = {}; // {day: stats}
-  for (let i = 24; i < Math.min(times.length, 168); i++) {
+  for (let i = 24; i < Math.min(times.length, 192); i++) {
     const d = new Date(times[i]);
     const dayKey = d.toLocaleDateString();
     const bucketKey = formatBucket(d.getHours()).toLowerCase();
@@ -1377,7 +1597,10 @@ function buildForecast(data) {
         period.minTemp !== Infinity &&
         period.maxTemp !== -Infinity
       ) {
-        tempCell.textContent = `${Math.round(period.minTemp)}-${Math.round(period.maxTemp)}°C`;
+        const minT = Math.round(period.minTemp);
+        const maxT = Math.round(period.maxTemp);
+        tempCell.textContent =
+          minT === maxT ? `${minT}°C` : `${minT}-${maxT}°C`;
         if (period.minTemp <= settings.minTempAlarm)
           tempCell.classList.add("forecast-alarm-cold");
         else if (period.minTemp <= settings.minTempCaution)

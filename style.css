@@ -54,7 +54,7 @@ body {
 .app-header {
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 9999;
   background: linear-gradient(180deg, #0b0f19, var(--card));
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   padding: 12px 16px;
@@ -63,6 +63,11 @@ body {
   box-sizing: border-box;
   display: flex;
   justify-content: center;
+}
+
+.leaflet-container .leaflet-control-zoom,
+.leaflet-container .leaflet-control-attribution {
+  z-index: 1000 !important;
 }
 
 .logo-title {
@@ -143,9 +148,15 @@ body {
 }
 
 .gust-scale-caption {
-  margin-bottom: 6px;
-  color: var(--muted);
-  font-size: 0.88rem;
+  margin-bottom: 10px;
+  color: var(--fg);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.gust-scale-wrapper {
+  margin-top: 16px;
+  margin-bottom: 16px;
 }
 
 .gust-scale-bar {
@@ -185,16 +196,92 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  padding-top: 0;
   pointer-events: auto;
   z-index: 10;
 }
 
+.gust-scale-input-wrapper .gust-scale-arrow {
+  order: -1;
+  color: var(--fg);
+  font-size: 1.1rem;
+  line-height: 1;
+  margin-bottom: 0;
+}
+
+.gust-scale-input-wrapper label {
+  order: 0;
+}
+
+.gust-scale-input-wrapper input {
+  text-align: center;
+  width: 64px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  padding: 3px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #0e1b2f;
+  color: var(--fg);
+}
+
+.scale-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.scale-ends span {
+  box-sizing: border-box;
+  min-width: 30px;
+  width: 30px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.scale-zero.hidden {
+  display: none;
+}
+
+.leaflet-container .leaflet-control-zoom,
+.leaflet-container .leaflet-control-attribution {
+  z-index: 2000;
+}
+
+.scale-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.scale-ends span {
+  min-width: 30px;
+  text-align: center;
+}
+
 .gust-scale-input-wrapper.caution label {
-  color: #ffb347;
+  color: #ff9500;
 }
 
 .gust-scale-input-wrapper.alarm label {
-  color: #ff6f6f;
+  color: #007bff;
+}
+
+#minTempCautionInputWrapper label,
+#maxTempCautionInputWrapper label {
+  color: #ff9500;
+}
+
+#minTempAlarmInputWrapper label {
+  color: #1e40af;
+}
+
+#maxTempAlarmInputWrapper label {
+  color: #ff0000;
 }
 
 .threshold-status {
@@ -203,6 +290,47 @@ body {
   font-size: 0.85rem;
   color: #bfcffd;
   margin: 8px 0 2px;
+}
+
+.scale-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.scale-color-explanation {
+  font-size: 0.92rem;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  color: #dce9ff;
+  text-align: center;
+}
+
+.threshold-legend.center {
+  text-align: center;
+  font-weight: 600;
+}
+
+.threshold-legend.center span.legend-alarm-cold {
+  color: rgba(30, 58, 138, 1);
+}
+
+.threshold-legend.center span.legend-caution-cold {
+  color: rgba(135, 206, 250, 1);
+}
+
+.threshold-legend.center span.legend-normal {
+  color: #ffffff;
+}
+
+.threshold-legend.center span.legend-warning {
+  color: rgba(255, 165, 0, 1);
+}
+
+.threshold-legend.center span.legend-alarm {
+  color: rgba(255, 0, 0, 1);
 }
 
 .threshold-legend.center {
@@ -320,7 +448,7 @@ body {
     align-items: center;
   }
   .current-grid {
-    align-items: start;
+    align-items: center;
   }
   .current-grid h2 {
     grid-column: 1 / -1;
@@ -400,6 +528,26 @@ h3 {
   padding: 20px;
   margin: 16px 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.card h2 {
+  font-size: 1.5rem;
+  color: #9fc7ff;
+  text-align: left;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.current-grid h2 {
+  font-size: 1.7rem;
+  text-align: left;
+}
+
+#forecastSummaryHeading {
+  font-size: 1.5rem;
+  color: #9fc7ff;
+  text-align: left;
+  margin-top: 20px;
 }
 
 .status {
@@ -632,6 +780,39 @@ footer .final-note {
   color: #cfd8ff;
 }
 
+#forecastTable24 tbody tr:nth-child(1) td,
+#forecastTable24 tbody tr:nth-child(1) th,
+#forecastTable24 tbody tr:nth-child(2) td,
+#forecastTable24 tbody tr:nth-child(2) th {
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: none !important;
+}
+
+#forecastTable24 thead tr#forecast24SymbolRow th,
+#forecastTable24 thead tr#forecast24HeaderRow th {
+  border: 1px solid var(--border) !important;
+}
+
+#forecastTable24 thead tr#forecast24SymbolRow th {
+  border-bottom: none !important;
+}
+
+#forecastTable24 thead tr#forecast24HeaderRow th {
+  border-top: none !important;
+}
+
+#forecastTable24 thead tr#forecast24SymbolRow th + th,
+#forecastTable24 thead tr#forecast24HeaderRow th + th {
+  border-left: none !important;
+}
+
+#forecastTable24 tbody tr:nth-child(2) td,
+#forecastTable24 tbody tr:nth-child(2) th {
+  border-bottom: 1px solid var(--border) !important;
+}
+
 #forecastTable24 .digits,
 #forecastTable24 .unit {
   font-size: 1em;
@@ -639,22 +820,22 @@ footer .final-note {
 
 #forecastTable24 td.forecast-warning,
 #forecastTableSummary td.forecast-warning {
-  background-color: rgba(255, 165, 0, 0.2) !important;
+  background-color: rgba(255, 165, 0, 0.35) !important;
 }
 
 #forecastTable24 td.forecast-alarm,
 #forecastTableSummary td.forecast-alarm {
-  background-color: rgba(255, 0, 0, 0.25) !important;
+  background-color: rgba(255, 0, 0, 0.35) !important;
 }
 
 #forecastTable24 td.forecast-caution-cold,
 #forecastTableSummary td.forecast-caution-cold {
-  background-color: rgba(135, 206, 250, 0.35) !important;
+  background-color: rgba(0, 85, 255, 0.4) !important;
 }
 
 #forecastTable24 td.forecast-alarm-cold,
 #forecastTableSummary td.forecast-alarm-cold {
-  background-color: rgba(30, 58, 138, 0.45) !important;
+  background-color: rgba(0, 51, 153, 0.6) !important;
 }
 
 .settings-grid {
@@ -751,7 +932,8 @@ footer .final-note {
 
 .gust-scale-input-wrapper input {
   width: 64px;
-  font-size: 0.85rem;
+  font-size: 1.6rem;
+  font-weight: 700;
   padding: 3px 5px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -866,17 +1048,15 @@ footer .final-note {
 }
 
 #resetSettingsButton {
-  color: #fff;
-  background: rgba(0, 0, 0, 0.35);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  color: #10243e;
+  background: linear-gradient(135deg, #ff4d4d, #c80000);
+  box-shadow: 0 5px 14px rgba(255, 77, 77, 0.35);
 }
 
 #resetSettingsButton:hover,
 #resetSettingsButton:focus {
   transform: translateY(-1px);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
-    0 6px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 18px rgba(255, 77, 77, 0.45);
 }
 
 .error {
@@ -886,13 +1066,14 @@ footer .final-note {
 
 .settings-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin-top: 20px;
 }
 
 #saveSettingsButton {
-  margin-top: 8px;
+  /* keep same vertical level as reset */
+  margin-top: 0;
 }
 
 .hidden {

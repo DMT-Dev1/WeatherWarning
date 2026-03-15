@@ -29,7 +29,7 @@
         <div>
           <h1>Advanced wind and weather warnings for Caravans and Campers.</h1>
           <p class="subtle title-subtitle">
-            Customised weather alerts to allowing you to plan ahead, stay safe
+            Customised weather alerts allowing you to plan ahead, stay safe
             and keep your awning in one piece!
           </p>
         </div>
@@ -49,7 +49,6 @@
       <section class="card current-grid">
         <h2>Current</h2>
         <div class="pane time-pane">
-          <h3>Time</h3>
           <div class="time">
             <div id="clock" class="clock">—:—</div>
             <div id="tz" class="tz">Detecting time zone…</div>
@@ -128,7 +127,6 @@
         </div>
 
         <div class="pane weather-pane">
-          <h3>Weather</h3>
           <div id="weatherStatus" class="status">
             Waiting for your location…
           </div>
@@ -156,8 +154,7 @@
         </div>
 
         <div class="pane map-pane">
-          <h2>Map</h2>
-          <div id="map" class="map"></div>
+            <div id="map" class="map"></div>
         </div>
       </section>
 
@@ -203,6 +200,7 @@
             <div class="gust-scale-caption">Wind gust thresholds</div>
             <div id="gustScaleBar" class="gust-scale-bar">
               <div id="gustScaleFill" class="gust-scale-fill"></div>
+              <div id="gustScaleZero" class="scale-zero-marker">0</div>
               <div class="gust-scale-input-area top">
                 <div
                   id="cautionInputWrapper"
@@ -249,14 +247,18 @@
                 class="gust-scale-marker alarm"
                 title="Alarm"
               ></div>
+              <div id="gustScaleZero" class="scale-zero-marker">0</div>
             </div>
-            <div class="threshold-status bottom">
-              Alarm = critical, Caution = warning
+            <div class="scale-ends">
+              <span class="scale-min">0</span>
+              <span id="gustScaleZero" class="scale-zero hidden">0</span>
+              <span class="scale-max">100</span>
             </div>
+            <div id="gustThresholdStatus" class="threshold-status bottom"></div>
           </div>
           <div class="gust-scale-wrapper">
             <div class="gust-scale-caption">
-              Temperature thresholds (min + max)
+              Temperature thresholds
             </div>
             <div id="tempScaleBar" class="gust-scale-bar">
               <div id="tempScaleFill" class="gust-scale-fill"></div>
@@ -332,10 +334,16 @@
                 title="Max alarm"
               ></div>
             </div>
-            <div class="threshold-status bottom">
-              Alarm = critical, Caution = warning
+            <div class="scale-ends">
+              <span class="scale-min">-20</span>
+              <span id="tempScaleZero" class="scale-zero hidden">0</span>
+              <span class="scale-max">50</span>
             </div>
+            <div id="tempThresholdStatus" class="threshold-status bottom"></div>
           </div>
+        </div>
+        <div class="threshold-legend center">
+          <span class="legend-alarm-cold">min alarm</span> → <span class="legend-caution-cold">min caution</span> → <span class="legend-normal">normal</span> → <span class="legend-warning">max caution</span> → <span class="legend-alarm">max alarm</span>
         </div>
         <div class="settings-actions">
           <button id="saveSettingsButton" type="button">Save settings</button>
@@ -349,9 +357,6 @@
           <span id="settingsSavedMessage" class="note" style="display: none"
             >Settings saved.</span
           >
-        </div>
-        <div class="threshold-legend center">
-          min alarm → min caution → normal → max caution → max alarm
         </div>
       </section>
 
